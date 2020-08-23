@@ -382,6 +382,8 @@ static long SVC_HashForAddress( netadr_t address ) {
 	for ( i = 0; i < size; i++ ) {
 		hash += (long)( ip[ i ] ) * ( i + 119 );
 	}
+	//add port for localhost loopback
+	hash += (long)( address.port ) * ( i + 119 );
 
 	hash = ( hash ^ ( hash >> 10 ) ^ ( hash >> 20 ) );
 	hash &= ( MAX_HASHES - 1 );
@@ -548,7 +550,7 @@ static void SVC_Status( netadr_t from ) {
 
 	// Allow getstatus to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) ) {
+	if ( SVC_RateLimit( &outboundLeakyBucket, 100, 100 ) ) {
 		Com_DPrintf( "SVC_Status: rate limit exceeded, dropping request\n" );
 		return;
 	}
@@ -611,7 +613,7 @@ void SVC_Info( netadr_t from ) {
 
 	// Allow getinfo to be DoSed relatively easily, but prevent
 	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &outboundLeakyBucket, 10, 100 ) ) {
+	if ( SVC_RateLimit( &outboundLeakyBucket, 100, 100 ) ) {
 		Com_DPrintf( "SVC_Info: rate limit exceeded, dropping request\n" );
 		return;
 	}
