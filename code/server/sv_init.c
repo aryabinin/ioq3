@@ -386,6 +386,59 @@ static void SV_TouchFile( const char *filename ) {
 	}
 }
 
+static void UpdateManifest(void)
+{
+	static char manifest[4096];
+	char mappk3_name[200];
+	const char *map_name = Cvar_VariableString("mapname");
+	char *gamedir = Cvar_VariableString( "fs_game" );
+	int rs;
+	FILE *fd;
+	size_t len = 0;
+	char *line = NULL;
+	char *m_ptr = manifest, *p;
+
+	fd = fopen("/root/.q3a/manifest.json", "r");
+	if (fd == NULL)
+		exit(EXIT_FAILURE);
+
+	while ((rs = getline(&line, &len, fd)) != -1) {
+		for (p = line ; *p; ++p)
+			*p = tolower(*p);
+
+		if (strstr(line, "linuxq3") != NULL) {
+			m_ptr += snprintf(m_ptr, sizeof(manifest) - (m_ptr - manifest), "%s ", line);
+			continue;
+		}
+		if (strstr(line, "baseq3") == line) {
+			snprintf(mappk3_name, sizeof(mappk3_name), "baseq3/%s.pk3", map_name);
+			for (p = mappk3_name ; *p; ++p)
+				*p = tolower(*p);
+			if (strstr(line, mappk3_name) != NULL ||
+				strstr(line, "pak1") != NULL) {
+				m_ptr += snprintf(m_ptr, sizeof(manifest) - (m_ptr - manifest), "%s ", line);
+                                continue;
+			}
+		}
+		if (*gamedir && (strstr(line, gamedir) == line)) {
+			snprintf(mappk3_name, sizeof(mappk3_name), "%s/%s.pk3", gamedir, map_name);
+			for (p = mappk3_name ; *p; ++p)
+				*p = tolower(*p);
+			if (strstr(line, mappk3_name) != NULL ||
+				strstr(line, "pak1") != NULL) {
+				m_ptr += snprintf(m_ptr, sizeof(manifest) - (m_ptr - manifest), "%s ", line);
+				continue;
+			}
+		}
+	}
+
+	fclose(fd);
+	free(line);
+	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
+	Cvar_Get("fs_manifest", manifest, CVAR_ROM | CVAR_SERVERINFO);
+	Cvar_Set("fs_manifest", manifest);
+}
+
 /*
 ================
 SV_SpawnServer
@@ -473,6 +526,8 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	Cvar_Set( "mapname", server );
 
 	Cvar_Set( "sv_mapChecksum", va("%i",checksum) );
+
+	UpdateManifest();
 
 	// serverid should be different each time
 	sv.serverId = com_frameTime;
