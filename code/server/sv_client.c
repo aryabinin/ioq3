@@ -556,7 +556,7 @@ gotnewcl:
 
 	// save the userinfo
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
-
+	newcl->old_cpma = qfalse;
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = VM_Call( gvm, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {
@@ -565,7 +565,10 @@ gotnewcl:
 
 		NET_OutOfBandPrint( NS_SERVER, from, "print\n%s\n", str );
 		Com_DPrintf ("Game rejected a connection: %s.\n", str);
-		return;
+		if (strcmp(str, "CPMA 1.52 required")) //allow quakejs with 1.48 version to connect
+			return;
+		else
+			newcl->old_cpma = qtrue;
 	}
 
 	SV_UserinfoChanged( newcl );
@@ -1731,6 +1734,17 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
 	if ( cl->state == CS_PRIMED ) {
+		if (cl->old_cpma) {
+			intptr_t denied;
+			cl->old_cpma = qfalse;
+			denied = VM_Call( gvm, GAME_CLIENT_CONNECT, cl-svs.clients, qtrue, qfalse ); // firstTime = qtrue
+			if ( denied ) {
+				// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
+				char *str = VM_ExplicitArgPtr( gvm, denied );
+				Com_Printf ("Game rejected a connection #2: %s.\n", str);
+				return;
+			}
+		}
 		SV_ClientEnterWorld( cl, &cmds[0] );
 		// the moves can be processed normaly
 	}
