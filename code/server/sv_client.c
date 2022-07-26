@@ -1756,6 +1756,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 				// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
 				char *str = VM_ExplicitArgPtr( gvm, denied );
 				Com_Printf ("Game rejected a connection #2: %s.\n", str);
+				SV_DropClient( cl, str);
 				return;
 			}
 		}
