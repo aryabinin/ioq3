@@ -1395,8 +1395,22 @@ void SV_UserinfoChanged( client_t *cl ) {
 	char	*ip;
 	int		i;
 	int	len;
+	char name_mod[21];
+	int clientNum = cl - svs.clients;
+	char *orig_name;
 
 	// name for C code
+	memset(name_mod, 0, sizeof(name_mod));
+	orig_name = Info_ValueForKey (cl->userinfo, "name");
+	Com_DPrintf("orig_name: %s \n", orig_name);
+	snprintf(name_mod, sizeof(name_mod), "^z??^7%s", orig_name);
+	Com_DPrintf("name_mod: %s \n", name_mod);
+	if (clientNum >= 0 && clientNum <= 100) {
+		snprintf(name_mod, sizeof(name_mod), "^z%d^7%s", clientNum, orig_name);
+	}
+
+	Info_SetValueForKey(cl->userinfo, "name", name_mod);
+
 	Q_strncpyz( cl->name, Info_ValueForKey (cl->userinfo, "name"), sizeof(cl->name) );
 
 	// rate command
