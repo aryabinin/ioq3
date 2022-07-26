@@ -1553,6 +1553,7 @@ typedef struct {
 static ucmd_t ucmds[] = {
 	{"userinfo", SV_UpdateUserinfo_f},
 	{"disconnect", SV_Disconnect_f},
+	{"timeout", SV_Disconnect_f},
 	{"cp", SV_VerifyPaks_f},
 	{"vdr", SV_ResetPureClient_f},
 	{"download", SV_BeginDownload_f},
