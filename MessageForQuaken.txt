@@ -1,0 +1,4 @@
+Hello Quaken,
+Player here, how are you ? What happened to your Qjs server ?
+Have have setup a server with your last(old) docker, is it possible to share your last docker ?
+Regards,
